@@ -1,0 +1,42 @@
+# Local data and logs
+content/
+logs/
+*.log
+
+# Environment and secrets
+.env
+.env.local
+google-service-account.json
+
+# Dependencies and build
+node_modules/
+dist/
+build/
+
+# Database
+*.db
+*.sqlite
+postgres-data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Runtime lock files
+.telegram-poller.lock
