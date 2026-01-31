@@ -40,3 +40,14 @@ temp/
 
 # Runtime lock files
 .telegram-poller.lock
+
+# Data exports and CSVs
+*.csv
+
+# Conversation logs and notes
+conversation.txt
+nul
+
+# Niche selection working files
+niche selection.md
+niche selection/
