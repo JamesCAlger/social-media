@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const GeneratedVideoSchema = z.object({
   sequence: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   storagePath: z.string(),
-  duration: z.number().min(4).max(6),
+  duration: z.number().min(4).max(12),
   resolution: z.string(),
   aspectRatio: z.string(),
   hasAudio: z.literal(true),
@@ -13,7 +13,7 @@ export const GeneratedVideoSchema = z.object({
 
 export const VideoGenerationOutputSchema = z.object({
   contentId: z.string().uuid(),
-  videos: z.array(GeneratedVideoSchema).length(3),
+  videos: z.array(GeneratedVideoSchema).min(1).max(3),
 });
 
 export type GeneratedVideo = z.infer<typeof GeneratedVideoSchema>;

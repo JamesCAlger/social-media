@@ -16,9 +16,9 @@ You are an AI designed to generate one creative, immersive ASMR content idea.
   "Sound": "Primary sound description under 15 words",
   "CulturalContext": "Culture/Region + Craft Type (e.g., 'Japanese pottery', 'Moroccan zellige')",
   "TextOverlays": {
-    "IntroText": "Short catchy phrase for intro screen (2-5 words, lowercase, poetic)",
-    "IntroSubtext": "Optional secondary text (1-3 words, lowercase)",
-    "SegmentLabels": ["label1", "label2", "label3"]
+    "IntroText": "MUST be 2-3 words, MAX 20 characters total (e.g., 'hidden beauty')",
+    "IntroSubtext": "Optional 1-2 words (e.g., 'revealed')",
+    "SegmentLabels": ["word1", "word2", "word3"]
   }
 }
 
@@ -28,15 +28,11 @@ The idea must specify:
 - Culture/region of origin
 - Internal/traditional color being revealed
 
-**TextOverlays Guidelines:**
-- IntroText: A poetic, catchy phrase that sets the mood (2-4 words MAX, under 25 characters). Examples: "history unmasked", "colors within", "hidden beauty"
-- IntroSubtext: Optional short context (1-3 words). Examples: "revealed", "a journey", "ancient whispers"
-- SegmentLabels: Three thematic labels for each 5-second segment (1 word each). Choose ONE theme:
-  - Process stages: ["uncover", "reveal", "admire"]
-  - Emotions: ["patience", "discovery", "wonder"]
-  - Actions: ["prepare", "transform", "complete"]
-  - Cultural elements: specific to the craft's culture
-- All text should be lowercase (will be auto-formatted for display)
+**CRITICAL TextOverlays Rules:**
+- IntroText: STRICTLY 2-3 words, MAXIMUM 20 characters. Examples: "hidden beauty", "colors within", "craft revealed"
+- IntroSubtext: Optional, 1-2 words only. Examples: "revealed", "ancient"
+- SegmentLabels: Exactly 3 single words, one per segment. Examples: ["uncover", "reveal", "admire"]
+- All text MUST be lowercase
 `.trim();
 
 export const IDEA_GENERATION_USER_PROMPT = `

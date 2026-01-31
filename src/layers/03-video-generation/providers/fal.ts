@@ -10,7 +10,7 @@ fal.config({
 export class FalVideoProvider {
   private model: string;
 
-  constructor(model: string = 'fal-ai/wan') {
+  constructor(model: string = 'fal-ai/wan-25-preview/text-to-video') {
     this.model = model;
   }
 
@@ -29,7 +29,7 @@ export class FalVideoProvider {
         return fal.subscribe(this.model, {
           input: {
             prompt: combinedPrompt,
-            duration: prompt.duration,
+            duration: String(prompt.duration),
             resolution: '720p',
             aspect_ratio: '9:16',
           },
@@ -74,12 +74,12 @@ export class FalVideoProvider {
     const generatedAt = new Date().toISOString();
 
     // Cost: WAN 2.5 at 720p = $0.10 per second
-    const cost = 5 * 0.10; // 5 seconds = $0.50
+    const cost = prompt.duration * 0.10;
 
     return {
       sequence,
       storagePath: videoUrl, // Will be updated after download
-      duration: 5,
+      duration: prompt.duration,
       resolution: '720p',
       aspectRatio: '9:16',
       hasAudio: true,
@@ -88,8 +88,8 @@ export class FalVideoProvider {
     };
   }
 
-  estimateCost(): number {
-    // 3 videos × 5 seconds × $0.10/sec (WAN 2.5 @ 720p)
-    return 3 * 5 * 0.10; // $1.50
+  estimateCost(duration: number = 5, segmentCount: number = 3): number {
+    // videos × seconds × $0.10/sec (WAN 2.5 @ 720p)
+    return segmentCount * duration * 0.10;
   }
 }

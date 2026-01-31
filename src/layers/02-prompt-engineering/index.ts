@@ -1,4 +1,4 @@
-import { PromptOutput, IdeaOutput } from '../../core/types';
+import { PromptOutput, IdeaOutput, Account } from '../../core/types';
 import { Database } from '../../core/database';
 import { createStorage } from '../../core/storage';
 import { logger } from '../../core/logger';
@@ -6,6 +6,7 @@ import { validate } from '../../utils/validation';
 import { PromptOutputSchema } from './schema';
 import { createPromptProvider } from './providers';
 import { PipelineConfig } from '../../core/types';
+import { getPromptConfigFromStrategy } from './templates';
 
 export class PromptEngineeringLayer {
   private database: Database;
@@ -15,8 +16,15 @@ export class PromptEngineeringLayer {
     this.database = database;
   }
 
-  async execute(idea: IdeaOutput, config: PipelineConfig): Promise<PromptOutput> {
-    logger.info('Starting Layer 2: Prompt Engineering', { contentId: idea.id });
+  async execute(idea: IdeaOutput, config: PipelineConfig, account?: Account): Promise<PromptOutput> {
+    // Get prompt config from account's content strategy
+    const promptConfig = getPromptConfigFromStrategy(account?.contentStrategy);
+
+    logger.info('Starting Layer 2: Prompt Engineering', {
+      contentId: idea.id,
+      segmentCount: promptConfig.segmentCount,
+      segmentDuration: promptConfig.segmentDuration,
+    });
 
     const startTime = Date.now();
 
@@ -28,8 +36,8 @@ export class PromptEngineeringLayer {
         config.layers.promptEngineering.temperature
       );
 
-      // Generate prompts
-      const prompts = await provider.generatePrompts(idea);
+      // Generate prompts with config
+      const prompts = await provider.generatePrompts(idea, promptConfig);
       const cost = provider.estimateCost();
 
       // Validate output

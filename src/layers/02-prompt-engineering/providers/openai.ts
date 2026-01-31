@@ -6,6 +6,7 @@ import { retry } from '../../../utils/retry';
 import {
   createPromptEngineeringSystemPrompt,
   createPromptEngineeringUserPrompt,
+  PromptConfig,
 } from '../templates';
 
 export class OpenAIPromptProvider {
@@ -19,8 +20,15 @@ export class OpenAIPromptProvider {
     this.temperature = temperature;
   }
 
-  async generatePrompts(idea: IdeaOutput): Promise<PromptOutput> {
-    logger.info('Generating prompts with OpenAI', { model: this.model, ideaId: idea.id });
+  async generatePrompts(idea: IdeaOutput, promptConfig?: PromptConfig): Promise<PromptOutput> {
+    const config = promptConfig || { segmentCount: 3, segmentDuration: 5 };
+
+    logger.info('Generating prompts with OpenAI', {
+      model: this.model,
+      ideaId: idea.id,
+      segmentCount: config.segmentCount,
+      segmentDuration: config.segmentDuration,
+    });
 
     const response = await retry(
       async () => {
@@ -30,11 +38,11 @@ export class OpenAIPromptProvider {
           messages: [
             {
               role: 'system',
-              content: createPromptEngineeringSystemPrompt(),
+              content: createPromptEngineeringSystemPrompt(config),
             },
             {
               role: 'user',
-              content: createPromptEngineeringUserPrompt(idea),
+              content: createPromptEngineeringUserPrompt(idea, config),
             },
           ],
         });
@@ -64,13 +72,16 @@ export class OpenAIPromptProvider {
         sequence: (index + 1) as 1 | 2 | 3,
         videoPrompt: p.videoPrompt,
         audioPrompt: p.audioPrompt,
-        duration: 5,
+        duration: config.segmentDuration,
         resolution: '720p',
         aspectRatio: '9:16',
       })),
     };
 
-    logger.info('Prompts generated successfully', { contentId: idea.id });
+    logger.info('Prompts generated successfully', {
+      contentId: idea.id,
+      promptCount: promptOutput.prompts.length,
+    });
     return promptOutput;
   }
 

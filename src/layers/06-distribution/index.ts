@@ -5,6 +5,7 @@ import { logger } from '../../core/logger';
 import { validate } from '../../utils/validation';
 import { DistributionOutputSchema } from './schema';
 import { InstagramPlatform } from './platforms/instagram';
+import { InstagramMultiAccountPlatform } from './platforms/instagram-multi';
 import { TikTokPlatform } from './platforms/tiktok';
 import { YouTubePlatform } from './platforms/youtube';
 
@@ -32,9 +33,33 @@ export class DistributionLayer {
 
       // Check if distribution is enabled
       if (process.env.ENABLE_DISTRIBUTION === 'true') {
-        // Instagram
-        if (process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID) {
-          logger.info('Posting to Instagram with R2 URL', { videoUrl });
+        // Get content to check for account_id
+        const content = await this.database.getContent(idea.id);
+
+        // Instagram - use multi-account if content has account_id
+        if (content?.account_id) {
+          // Multi-account mode: use account's credentials from database
+          const account = await this.database.accounts.getAccountById(content.account_id);
+
+          if (account && account.businessAccountId) {
+            logger.info('Posting to Instagram using multi-account mode', {
+              accountId: account.id,
+              accountName: account.name,
+              businessAccountId: account.businessAccountId,
+              videoUrl,
+            });
+
+            const instagramMulti = new InstagramMultiAccountPlatform(this.database.accounts);
+            const instagramPost = await instagramMulti.post(account, videoUrl, caption);
+            posts.push(instagramPost);
+          } else {
+            logger.warn('Content has account_id but account not found or missing businessAccountId', {
+              accountId: content.account_id,
+            });
+          }
+        } else if (process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID) {
+          // Legacy mode: use environment variable (for backward compatibility)
+          logger.info('Posting to Instagram using legacy ENV mode', { videoUrl });
           const instagram = new InstagramPlatform(
             this.database,
             process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID

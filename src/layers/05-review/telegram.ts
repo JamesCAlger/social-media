@@ -33,7 +33,7 @@ export class TelegramProvider {
   }
 
   /**
-   * Sends a review request to Telegram with inline buttons
+   * Sends a review request to Telegram with inline buttons and embedded video
    */
   async sendReviewRequest(
     idea: IdeaOutput,
@@ -41,11 +41,38 @@ export class TelegramProvider {
   ): Promise<number> {
     logger.info('Sending review request to Telegram', { contentId: idea.id });
 
-    const videoPath = this.storage.getFullPath(composition.finalVideo.storagePath);
-    const message = this.formatReviewMessage(idea, composition, videoPath);
+    const caption = this.formatVideoCaption(idea, composition);
 
     try {
-      // Send message with inline keyboard
+      // Try to send video with inline keyboard using R2 URL
+      const r2Url = composition.finalVideo.r2Url;
+      if (r2Url) {
+        logger.info('Sending video via R2 URL', { r2Url });
+        const response = await axios.post(`${this.apiUrl}/sendVideo`, {
+          chat_id: this.chatId,
+          video: r2Url,
+          caption: caption,
+          parse_mode: 'Markdown',
+          reply_markup: this.buildInlineKeyboard(idea.id),
+        });
+
+        const messageId = response.data.result.message_id;
+        logger.info('Review request with video sent to Telegram', {
+          contentId: idea.id,
+          messageId,
+        });
+
+        // Save message ID to database for tracking
+        await this.database.saveTelegramMessage(idea.id, messageId, this.chatId);
+
+        return messageId;
+      }
+
+      // Fallback to text-only message if no R2 URL
+      logger.warn('No R2 URL available, sending text-only message');
+      const videoPath = this.storage.getFullPath(composition.finalVideo.storagePath);
+      const message = this.formatReviewMessage(idea, composition, videoPath);
+
       const response = await axios.post(`${this.apiUrl}/sendMessage`, {
         chat_id: this.chatId,
         text: message,
@@ -54,12 +81,11 @@ export class TelegramProvider {
       });
 
       const messageId = response.data.result.message_id;
-      logger.info('Review request sent to Telegram', {
+      logger.info('Review request sent to Telegram (text only)', {
         contentId: idea.id,
         messageId,
       });
 
-      // Save message ID to database for tracking
       await this.database.saveTelegramMessage(idea.id, messageId, this.chatId);
 
       return messageId;
@@ -69,6 +95,29 @@ export class TelegramProvider {
         `Failed to send Telegram message: ${(error as any).response?.data?.description || (error as Error).message}`
       );
     }
+  }
+
+  /**
+   * Formats a shorter caption for video messages (Telegram has 1024 char limit for captions)
+   */
+  private formatVideoCaption(
+    idea: IdeaOutput,
+    composition: CompositionOutput
+  ): string {
+    const fileSizeMB = (composition.finalVideo.fileSize / 1024 / 1024).toFixed(2);
+
+    return `🎬 *New Content Ready for Review*
+
+📋 *ID:* \`${idea.id.substring(0, 8)}...\`
+
+💡 *Idea:* ${idea.idea.substring(0, 100)}${idea.idea.length > 100 ? '...' : ''}
+
+📝 *Caption:*
+${idea.caption.substring(0, 200)}${idea.caption.length > 200 ? '...' : ''}
+
+🎥 ${composition.finalVideo.duration}s | ${fileSizeMB} MB
+
+👇 *Choose an action:*`;
   }
 
   /**

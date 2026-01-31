@@ -5,7 +5,7 @@ export const CompositionOutputSchema = z.object({
   finalVideo: z.object({
     storagePath: z.string(),
     r2Url: z.string().url(),
-    duration: z.number().min(14).max(20), // Extended to allow intro (up to ~17.5s with 2.5s intro)
+    duration: z.number().min(5).max(35), // Supports 1-3 segments x 5-10 seconds each + optional intro
     resolution: z.literal('720p'),
     aspectRatio: z.literal('9:16'),
     fileSize: z.number(),

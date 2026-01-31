@@ -1,8 +1,9 @@
 import { OpenAIPromptProvider } from './openai';
 import { PromptOutput, IdeaOutput } from '../../../core/types';
+import { PromptConfig } from '../templates';
 
 export interface IPromptProvider {
-  generatePrompts(idea: IdeaOutput): Promise<PromptOutput>;
+  generatePrompts(idea: IdeaOutput, promptConfig?: PromptConfig): Promise<PromptOutput>;
   estimateCost(): number;
 }
 

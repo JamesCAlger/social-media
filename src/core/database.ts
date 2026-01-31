@@ -1,5 +1,7 @@
 import { Pool, PoolClient } from 'pg';
 import dotenv from 'dotenv';
+import { AccountRepository } from './account-repository';
+import { EducationalRepository } from './educational-repository';
 
 dotenv.config();
 
@@ -11,6 +13,7 @@ export interface TextOverlaysRecord {
 
 export interface ContentRecord {
   id: string;
+  account_id?: string;  // Link to account for multi-account support
   created_at: Date;
   idea: string;
   caption: string;
@@ -64,6 +67,12 @@ export interface TelegramInteraction {
 export class Database {
   private pool: Pool;
 
+  /** Account repository for multi-account operations */
+  public accounts: AccountRepository;
+
+  /** Educational content repository for educational pipeline */
+  public educational: EducationalRepository;
+
   constructor() {
     this.pool = new Pool({
       connectionString: process.env.DATABASE_URL,
@@ -72,10 +81,21 @@ export class Database {
     this.pool.on('error', (err) => {
       console.error('Unexpected database error:', err);
     });
+
+    // Initialize repositories
+    this.accounts = new AccountRepository(this.pool);
+    this.educational = new EducationalRepository(this.pool);
   }
 
   async getClient(): Promise<PoolClient> {
     return this.pool.connect();
+  }
+
+  /**
+   * Get the connection pool (for use by repositories)
+   */
+  getPool(): Pool {
+    return this.pool;
   }
 
   async createContent(data: {
@@ -102,6 +122,92 @@ export class Database {
         ]
       );
       return result.rows[0].id;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Create content linked to a specific account
+   */
+  async createContentForAccount(accountId: string, data: {
+    idea: string;
+    caption: string;
+    cultural_context?: string;
+    environment?: string;
+    sound_concept?: string;
+    text_overlays?: TextOverlaysRecord;
+  }): Promise<string> {
+    const client = await this.getClient();
+    try {
+      const result = await client.query(
+        `INSERT INTO content (account_id, idea, caption, cultural_context, environment, sound_concept, text_overlays, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'generating')
+         RETURNING id`,
+        [
+          accountId,
+          data.idea,
+          data.caption,
+          data.cultural_context,
+          data.environment,
+          data.sound_concept,
+          data.text_overlays ? JSON.stringify(data.text_overlays) : null,
+        ]
+      );
+      return result.rows[0].id;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Get content by account ID
+   */
+  async getContentByAccount(accountId: string, limit: number = 50): Promise<ContentRecord[]> {
+    const client = await this.getClient();
+    try {
+      const result = await client.query(
+        `SELECT * FROM content WHERE account_id = $1 ORDER BY created_at DESC LIMIT $2`,
+        [accountId, limit]
+      );
+      return result.rows;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Get recent ideas for an account (for avoiding repetition)
+   * Returns just the idea text from recent content to use as exclusion list
+   */
+  async getRecentIdeasForAccount(accountId: string, limit: number = 10): Promise<string[]> {
+    const client = await this.getClient();
+    try {
+      const result = await client.query(
+        `SELECT idea FROM content
+         WHERE account_id = $1
+         AND idea IS NOT NULL
+         ORDER BY created_at DESC
+         LIMIT $2`,
+        [accountId, limit]
+      );
+      return result.rows.map(row => row.idea);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Get recent content across all accounts
+   */
+  async getRecentContent(limit: number = 50): Promise<ContentRecord[]> {
+    const client = await this.getClient();
+    try {
+      const result = await client.query(
+        `SELECT * FROM content ORDER BY created_at DESC LIMIT $1`,
+        [limit]
+      );
+      return result.rows;
     } finally {
       client.release();
     }

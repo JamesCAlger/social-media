@@ -1,4 +1,7 @@
-import { IdeaOutput, ContentStrategy, HookStyle } from '../../core/types';
+const fs = require('fs');
+
+// New templates.ts content with viral structure
+const newContent = `import { IdeaOutput, ContentStrategy, HookStyle } from '../../core/types';
 
 export interface PromptConfig {
   segmentCount: number;
@@ -21,13 +24,13 @@ export function createViralPromptSystemPrompt(config: PromptConfig = DEFAULT_CON
 
   const hookInstruction = getHookInstruction(hookStyle);
 
-  return `
+  return \`
 You are a specialized AI that generates highly detailed video prompts for AI video generation (optimized for Veo 3 / WAN 2.5).
 
-Your task is to generate ${segmentCount === 1 ? '1 video prompt' : `${segmentCount} sequential video prompts`} (${segmentDuration} seconds ${segmentCount === 1 ? 'total' : 'each'}).
+Your task is to generate \${segmentCount === 1 ? '1 video prompt' : \`\${segmentCount} sequential video prompts\`} (\${segmentDuration} seconds \${segmentCount === 1 ? 'total' : 'each'}).
 
 **VIRAL VIDEO STRUCTURE (Critical for engagement):**
-${hookInstruction}
+\${hookInstruction}
 
 **TECHNICAL SPECIFICATIONS (Include in every prompt):**
 - Camera: Hyper-realistic cinematic close-up, ultra-sharp macro lens, shallow depth of field
@@ -58,13 +61,13 @@ Return ONLY a valid JSON object with this structure:
       "sequence": 1,
       "videoPrompt": "Your detailed prompt here (150-250 words)...",
       "audioPrompt": "ASMR sound description (crisp, detailed)...",
-      "duration": ${segmentDuration},
+      "duration": \${segmentDuration},
       "resolution": "720p",
       "aspectRatio": "9:16"
     }
   ]
 }
-`.trim();
+\`.trim();
 }
 
 /**
@@ -72,66 +75,66 @@ Return ONLY a valid JSON object with this structure:
  */
 function getHookInstruction(hookStyle?: HookStyle): string {
   const instructions: Record<HookStyle, string> = {
-    immediate_action: `
+    immediate_action: \`
 HOOK: IMMEDIATE ACTION (Frame 1 = Mid-action)
 - Start the video MID-SLICE - knife already cutting through the object
 - NO setup, NO anticipation - immediate visual payoff
 - First frame must show the satisfying action already happening
-- Pure visual hook - no text needed`,
+- Pure visual hook - no text needed\`,
 
-    wait_for_it: `
+    wait_for_it: \`
 HOOK: WAIT FOR IT (Anticipation Build)
 - Start with the knife hovering above the object
 - Slow, deliberate descent building anticipation
 - The "wait for it" moment before the satisfying slice
-- Text overlay: "wait for it..." will be added`,
+- Text overlay: "wait for it..." will be added\`,
 
-    question: `
+    question: \`
 HOOK: QUESTION (Engagement Hook)
 - Frame the shot to create curiosity about what's inside
 - Show the mysterious exterior before revealing interior
 - Text overlay: "Why is this so satisfying?" will be added
-- Focus on the unknown/surprise element`,
+- Focus on the unknown/surprise element\`,
 
-    result_first: `
+    result_first: \`
 HOOK: RESULT FIRST (Show the Payoff)
 - Start by showing the RESULT - gems spilling out, interior revealed
 - Then cut to the beginning of the slice
 - Reverse storytelling - satisfy curiosity immediately, then show how
-- This creates "how did they do that?" engagement`,
+- This creates "how did they do that?" engagement\`,
 
-    mystery: `
+    mystery: \`
 HOOK: MYSTERY (What's Inside?)
 - Emphasize the opaque/mysterious exterior
 - Build intrigue about what could be hidden inside
 - Text overlay: "What's inside?" will be added
-- Dramatic reveal moment when sliced`,
+- Dramatic reveal moment when sliced\`,
 
-    sound_focus: `
+    sound_focus: \`
 HOOK: SOUND FOCUS (Audio-First)
 - Emphasize the SOUND in the prompt - make it crisp and detailed
 - Text overlay: "Turn your sound on 🔊" will be added
 - Audio should be the star - glass cracking, gems cascading
-- Visual supports the satisfying audio experience`,
+- Visual supports the satisfying audio experience\`,
 
-    guess_the_color: `
+    guess_the_color: \`
 HOOK: GUESS THE COLOR (Current Default)
 - Show exterior color clearly
 - Build anticipation for interior color reveal
 - Text overlay: "guess the color" will be added
-- Interior gems should be CONTRASTING color to exterior`,
+- Interior gems should be CONTRASTING color to exterior\`,
 
-    visual: `
+    visual: \`
 HOOK: VISUAL (Legacy - Pure Visual)
 - Standard satisfying visual progression
 - Focus on material textures and smooth motion
-- No specific hook structure`,
+- No specific hook structure\`,
 
-    text_overlay: `
+    text_overlay: \`
 HOOK: TEXT OVERLAY (Legacy - Generic)
 - Standard text overlay hook
 - Generic engaging text will be added
-- Focus on clear, engaging visuals`,
+- Focus on clear, engaging visuals\`,
   };
 
   return instructions[hookStyle || 'guess_the_color'] || instructions.guess_the_color;
@@ -147,16 +150,16 @@ export function createPromptEngineeringSystemPrompt(config: PromptConfig = DEFAU
 export function createPromptEngineeringUserPrompt(idea: IdeaOutput, config: PromptConfig = DEFAULT_CONFIG): string {
   const { segmentCount, segmentDuration, hookStyle } = config;
 
-  const hookContext = hookStyle ? `\n**Hook Style:** ${hookStyle} (follow the hook instructions from system prompt)` : '';
+  const hookContext = hookStyle ? \`\\n**Hook Style:** \${hookStyle} (follow the hook instructions from system prompt)\` : '';
 
   if (segmentCount === 1) {
-    return `
-Generate 1 video prompt (${segmentDuration} seconds) based on this idea:
+    return \`
+Generate 1 video prompt (\${segmentDuration} seconds) based on this idea:
 
-**Idea:** ${idea.idea}
-**Context:** ${idea.culturalContext}
-**Environment:** ${idea.environment}
-**Sound Concept:** ${idea.soundConcept}${hookContext}
+**Idea:** \${idea.idea}
+**Context:** \${idea.culturalContext}
+**Environment:** \${idea.environment}
+**Sound Concept:** \${idea.soundConcept}\${hookContext}
 
 **CRITICAL VIRAL ELEMENTS TO INCLUDE:**
 1. "Hyper-realistic cinematic close-up" - start with this phrase
@@ -171,21 +174,21 @@ Generate 1 video prompt (${segmentDuration} seconds) based on this idea:
 **PROMPT LENGTH:** 150-250 words with ALL technical specifications included.
 
 Focus on making the first frame IMMEDIATELY engaging - this is critical for viral performance.
-`.trim();
+\`.trim();
   }
 
-  return `
-Generate ${segmentCount} video prompts based on this idea:
+  return \`
+Generate \${segmentCount} video prompts based on this idea:
 
-**Idea:** ${idea.idea}
-**Context:** ${idea.culturalContext}
-**Environment:** ${idea.environment}
-**Sound Concept:** ${idea.soundConcept}${hookContext}
+**Idea:** \${idea.idea}
+**Context:** \${idea.culturalContext}
+**Environment:** \${idea.environment}
+**Sound Concept:** \${idea.soundConcept}\${hookContext}
 
-Create ${segmentCount} sequential prompts (${segmentDuration} seconds each) that:
-${segmentCount >= 1 ? '1. Show the initial state with full technical setup (camera, lighting, positioning)' : ''}
-${segmentCount >= 2 ? '2. Continue the action mid-process with material response details' : ''}
-${segmentCount >= 3 ? '3. Complete the reveal with satisfying conclusion' : ''}
+Create \${segmentCount} sequential prompts (\${segmentDuration} seconds each) that:
+\${segmentCount >= 1 ? '1. Show the initial state with full technical setup (camera, lighting, positioning)' : ''}
+\${segmentCount >= 2 ? '2. Continue the action mid-process with material response details' : ''}
+\${segmentCount >= 3 ? '3. Complete the reveal with satisfying conclusion' : ''}
 
 **CRITICAL VIRAL ELEMENTS TO INCLUDE IN EACH PROMPT:**
 1. "Hyper-realistic cinematic close-up" - camera style
@@ -196,7 +199,7 @@ ${segmentCount >= 3 ? '3. Complete the reveal with satisfying conclusion' : ''}
 6. Describe exact ASMR sounds for audio sync
 
 Each prompt should be 150-250 words and optimized for viral performance.
-`.trim();
+\`.trim();
 }
 
 /**
@@ -238,7 +241,7 @@ export function getHookStyleDescription(hookStyle: HookStyle): string {
     wait_for_it: 'Build anticipation with "wait for it..." text',
     question: 'Engagement hook with "Why is this so satisfying?"',
     result_first: 'Show the satisfying result first, then how',
-    mystery: 'Create intrigue with "What\'s inside?"',
+    mystery: 'Create intrigue with "What\\'s inside?"',
     sound_focus: 'Audio-first with "Turn your sound on"',
     guess_the_color: 'Engagement with "Guess the color inside"',
     visual: 'Legacy pure visual hook',
@@ -247,3 +250,7 @@ export function getHookStyleDescription(hookStyle: HookStyle): string {
 
   return descriptions[hookStyle] || 'Unknown hook style';
 }
+`;
+
+fs.writeFileSync('src/layers/02-prompt-engineering/templates.ts', newContent);
+console.log('Updated templates.ts with viral structure and hook styles');
